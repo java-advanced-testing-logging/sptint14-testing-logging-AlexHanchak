@@ -20,8 +20,8 @@ Most of the functionality for controllers, services, and templates is already im
 - **Controllers and Templates**: A full user interface for managing users, ToDo lists, tasks, and states.
 - **Tests and Logging for Task and State**: The `Task` and `State` components already have full test coverage and implemented logging (use them as an example).
 
-### ⚠️ Task for Students (To Be Implemented)
-You need to implement testing and logging for the **User** and **ToDo** components.
+### ✅ Task for Students (Implemented)
+Testing and logging for the **User** and **ToDo** components are implemented.
 
 #### 1. Unit Tests (Service Layer - Mockito)
 Implement tests to verify the business logic in:
@@ -75,5 +75,5 @@ Add logging for core operations and errors in:
 - ✅ State management (full CRUD) at `/states`
 - ✅ Registration form display at `/users/create`
 - ✅ Task management (already covered by tests)
-- ⚠️ User management (needs your tests and logging)
-- ⚠️ ToDo management (needs your tests and logging)
+- ✅ User management (tests and logging implemented)
+- ✅ ToDo management (tests and logging implemented)

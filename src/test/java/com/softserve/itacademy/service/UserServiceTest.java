@@ -72,7 +72,7 @@ public class UserServiceTest {
     void update_ShouldAllowRoleChange_ForAdmin() {
         User user = new User();
         user.setId(1L);
-        user.setRole(UserRole.ADMIN);
+        user.setRole(UserRole.USER);
         user.setEmail("admin@mail.com");
         user.setFirstName("Admin");
         user.setLastName("User");
@@ -87,7 +87,7 @@ public class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        UserDto updated = userService.update(dto);
+        UserDto updated = userService.update(dto, true);
 
         assertEquals(UserRole.USER, updated.getRole());
         assertEquals(UserRole.USER, user.getRole());
@@ -116,7 +116,7 @@ public class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(any(User.class))).thenReturn(user);
 
-        UserDto updated = userService.update(dto);
+        UserDto updated = userService.update(dto, false);
 
         assertEquals(UserRole.USER, updated.getRole());
         assertEquals(UserRole.USER, user.getRole());
@@ -132,6 +132,25 @@ public class UserServiceTest {
         User found = userService.readById(1L);
 
         assertEquals(user, found);
+    }
+
+    @Test
+    void update_DefaultOverload_ShouldNotAllowRoleChange() {
+        User user = new User();
+        user.setId(1L);
+        user.setRole(UserRole.USER);
+
+        UpdateUserDto dto = new UpdateUserDto();
+        dto.setId(1L);
+        dto.setRole(UserRole.ADMIN);
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.save(any(User.class))).thenReturn(user);
+
+        UserDto updated = userService.update(dto);
+
+        assertEquals(UserRole.USER, updated.getRole());
+        assertEquals(UserRole.USER, user.getRole());
     }
 
     @Test

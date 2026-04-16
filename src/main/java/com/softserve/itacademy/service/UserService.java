@@ -62,22 +62,20 @@ public class UserService {
 
     @Transactional
     public UserDto update(UpdateUserDto updateUserDto) {
+        return update(updateUserDto, false);
+    }
+
+    @Transactional
+    public UserDto update(UpdateUserDto updateUserDto, boolean canChangeRole) {
         log.info("Updating user with ID: {}", updateUserDto.getId());
         User user = userRepository.findById(updateUserDto.getId()).orElseThrow(
                 () -> {
                     log.error("User with ID {} not found", updateUserDto.getId());
                     return new EntityNotFoundException("User with id " + updateUserDto.getId() + " not found");
                 });
-        if (updateUserDto.getRole() != null && user.getRole() == UserRole.ADMIN) {
-            log.debug("User {} is ADMIN and can change role", user.getId());
-            user.setRole(updateUserDto.getRole());
-            updateUserDto.setRole(null); // prevent double setting in converter if we want to be strict, 
-                                         // but fillFields already has a null check now.
-        } else {
-            if (updateUserDto.getRole() != null) {
-                log.warn("User {} attempted to change role without ADMIN privileges", user.getId());
-            }
-            updateUserDto.setRole(null); // don't allow non-admin to change role, or admin to change to null
+        if (!canChangeRole && updateUserDto.getRole() != null) {
+            log.warn("Role change denied for user {} due to insufficient privileges", updateUserDto.getId());
+            updateUserDto.setRole(null);
         }
         userDtoConverter.fillFields(user, updateUserDto);
         userRepository.save(user);

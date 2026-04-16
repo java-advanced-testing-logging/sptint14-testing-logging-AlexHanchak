@@ -8,6 +8,7 @@ import com.softserve.itacademy.model.User;
 import com.softserve.itacademy.service.TaskService;
 import com.softserve.itacademy.service.ToDoService;
 import com.softserve.itacademy.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -20,7 +21,9 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.mockito.Mockito.when;
 
@@ -105,5 +108,37 @@ public class ToDoControllerTest {
                     assertEquals(1, users.size());
                     assertEquals("candidate@mail.com", users.get(0).getEmail());
                 });
+    }
+
+    @Test
+    void createToDo_ShouldReturnForm_WhenDuplicateTitle() throws Exception {
+        User owner = new User();
+        owner.setId(1L);
+        owner.setEmail("owner@mail.com");
+
+        ToDo todo = new ToDo();
+        todo.setTitle("Duplicate");
+        todo.setOwner(owner);
+
+        when(userService.readById(1L)).thenReturn(owner);
+        when(todoDtoConverter.toEntity(any(), any())).thenReturn(todo);
+        when(todoService.create(any())).thenThrow(new IllegalArgumentException("ToDo with title already exists"));
+
+        mockMvc.perform(post("/todos/create/users/1")
+                        .param("title", "Duplicate")
+                        .param("ownerId", "1"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("create-todo"))
+                .andExpect(model().attributeHasFieldErrors("todo", "title"));
+    }
+
+    @Test
+    void getTasks_ShouldReturn404View_WhenToDoNotFound() throws Exception {
+        when(todoService.readById(999L)).thenThrow(new EntityNotFoundException("ToDo not found"));
+
+        mockMvc.perform(get("/todos/999/tasks"))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("error/404"))
+                .andExpect(model().attributeExists("message"));
     }
 }

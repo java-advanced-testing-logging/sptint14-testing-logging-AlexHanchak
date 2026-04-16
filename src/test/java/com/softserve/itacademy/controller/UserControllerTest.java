@@ -4,6 +4,7 @@ import com.softserve.itacademy.dto.userDto.UserDtoConverter;
 import com.softserve.itacademy.model.User;
 import com.softserve.itacademy.model.UserRole;
 import com.softserve.itacademy.service.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -84,6 +85,20 @@ public class UserControllerTest {
     }
 
     @Test
+    void createPost_ShouldReturnForm_WhenDuplicateEmail() throws Exception {
+        when(userService.register(any())).thenThrow(new IllegalArgumentException("User with email already exists"));
+
+        mockMvc.perform(post("/users/create")
+                        .param("firstName", "Ivan")
+                        .param("lastName", "Ivanov")
+                        .param("email", "ivan@mail.com")
+                        .param("password", "pass123"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("create-user"))
+                .andExpect(model().attributeHasFieldErrors("user", "email"));
+    }
+
+    @Test
     void getAll_ShouldReturnUsersListView() throws Exception {
         when(userService.getAll()).thenReturn(Collections.emptyList());
 
@@ -91,5 +106,15 @@ public class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("users-list"))
                 .andExpect(model().attributeExists("users"));
+    }
+
+    @Test
+    void read_ShouldReturn404View_WhenUserNotFound() throws Exception {
+        when(userService.readById(999L)).thenThrow(new EntityNotFoundException("User not found"));
+
+        mockMvc.perform(get("/users/999/read"))
+                .andExpect(status().isNotFound())
+                .andExpect(view().name("error/404"))
+                .andExpect(model().attributeExists("message"));
     }
 }

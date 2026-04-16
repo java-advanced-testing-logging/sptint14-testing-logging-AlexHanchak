@@ -82,7 +82,8 @@ public class UserController {
     public String update(@PathVariable("id") Long id,
                         @Validated @ModelAttribute("user") UpdateUserDto userDto,
                         BindingResult result,
-                        Model model) {
+                        Model model,
+                        HttpSession session) {
         log.info("POST /users/{}/update", id);
         if (result.hasErrors()) {
             log.warn("Validation errors while updating user {}: {}", id, result.getAllErrors().size());
@@ -90,7 +91,13 @@ public class UserController {
             return "update-user";
         }
         userDto.setId(id);
-        userService.update(userDto);
+        boolean canChangeRole = false;
+        Object currentUserId = session.getAttribute("user_id");
+        if (currentUserId instanceof Long currentId) {
+            User currentUser = userService.readById(currentId);
+            canChangeRole = currentUser.getRole() == UserRole.ADMIN;
+        }
+        userService.update(userDto, canChangeRole);
         return "redirect:/users/all";
     }
 
